@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html class="dark" lang="en">
 <head>
@@ -16,46 +17,18 @@
     theme: {
       extend: {
         "colors": {
-          "secondary-fixed-dim": "#adc6ff","on-tertiary": "#620040","surface": "#0b1326",
-          "tertiary-container": "#e364a7","on-surface": "#dae2fd","on-secondary-fixed": "#001a42",
-          "primary-fixed": "#f0dbff","surface-container-lowest": "#060e20","secondary": "#adc6ff",
-          "inverse-on-surface": "#283044","primary-fixed-dim": "#ddb7ff","tertiary-fixed": "#ffd8e7",
-          "on-secondary": "#002e6a","on-primary-fixed-variant": "#6900b3","inverse-surface": "#dae2fd",
-          "on-error": "#690005","surface-dim": "#0b1326","outline": "#988d9f",
-          "surface-container-low": "#131b2e","background": "#0b1326","outline-variant": "#4d4354",
-          "primary-container": "#b76dff","inverse-primary": "#842bd2","surface-variant": "#2d3449",
-          "surface-container": "#171f33","surface-bright": "#31394d","on-secondary-container": "#e6ecff",
-          "secondary-container": "#0566d9","surface-container-high": "#222a3d","tertiary-fixed-dim": "#ffafd3",
-          "surface-tint": "#ddb7ff","tertiary": "#ffafd3","secondary-fixed": "#d8e2ff",
-          "on-primary-container": "#400071","on-error-container": "#ffdad6","on-tertiary-fixed-variant": "#85145a",
-          "error": "#ffb4ab","primary": "#ddb7ff","on-tertiary-fixed": "#3d0026",
-          "on-tertiary-container": "#560038","error-container": "#93000a","on-primary-fixed": "#2c0051",
-          "surface-container-highest": "#2d3449","on-secondary-fixed-variant": "#004395",
-          "on-background": "#dae2fd","on-surface-variant": "#cfc2d6","on-primary": "#490080"
+          "primary": "#ddb7ff",
+          "surface": "#0b1326",
+          "background": "#0b1326",
         }
       },
     },
   }
 </script>
-<style>
-  :root { --bg-gradient: radial-gradient(circle at 50% 0%, #1a1033 0%, #0b1326 100%); }
-  body { background: var(--bg-gradient); min-height: 100vh; color: #dae2fd; transition: background 1s ease; }
-  .glass-panel { background: rgba(255,255,255,0.03); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); }
-  .glass-card-hover:hover { border-color: rgba(183,109,255,0.4); box-shadow: 0 0 20px rgba(183,109,255,0.1); }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-thumb { background: rgba(183,109,255,0.2); border-radius: 10px; }
-  #map { height: 300px; border-radius: 2rem; z-index: 10; border: 1px solid rgba(255,255,255,0.1); }
-  .loading-pulse { animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-  .weather-rain { background: radial-gradient(circle at 50% 0%, #101a33 0%, #0b1326 100%) !important; }
-  .weather-clear { background: radial-gradient(circle at 50% 0%, #332610 0%, #0b1326 100%) !important; }
-  .weather-storm { background: radial-gradient(circle at 50% 0%, #201033 0%, #050510 100%) !important; }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-</style>
+<link rel="stylesheet" href="{% static 'assets/style.css' %}" />
 </head>
-<body class="font-body-md selection:bg-primary/30 overflow-x-hidden">
+<body class="selection:bg-primary/30 overflow-x-hidden">
 
-<!-- TopAppBar -->
 <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-slate-950/40 backdrop-blur-[20px] border-b border-white/10">
   <div class="flex items-center gap-4">
     <span class="font-['Space_Grotesk'] text-2xl font-bold tracking-tighter text-white uppercase">SkyCast</span>
@@ -63,260 +36,366 @@
   <div class="flex-1 max-w-xl px-8 hidden md:block">
     <div class="relative">
       <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-      <input id="citySearchInput" class="w-full bg-white/5 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-purple-500/50 outline-none transition-all" placeholder="Search city..."/>
+      <input id="citySearchInput" class="w-full bg-white/5 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-purple-500/50 outline-none transition-all text-white" placeholder="Search any city..."/>
     </div>
   </div>
   <div class="flex items-center gap-4">
     <div id="loadingIndicator" class="hidden loading-pulse text-primary"><span class="material-symbols-outlined">sync</span></div>
-    <button class="material-symbols-outlined text-slate-400 p-2">notifications</button>
+    <div id="severeBadge" class="hidden bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-bold border border-red-500/30">SEVERE RISK</div>
   </div>
 </header>
 
 <main class="pt-24 pb-32 px-6 max-w-7xl mx-auto space-y-12">
   
-  <!-- Recent Searches (Personalization) -->
   <section id="recentSection" class="hidden">
-    <h3 class="font-label-caps text-xs text-slate-500 mb-4 tracking-widest uppercase">Quick Access</h3>
-    <div id="recentContainer" class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-      <!-- Recent cities chips -->
-    </div>
+    <div id="recentContainer" class="flex gap-3 overflow-x-auto no-scrollbar pb-2"></div>
   </section>
 
-  <!-- Hero & Insights -->
   <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-    <div id="mainWeatherCard" class="lg:col-span-8 glass-panel rounded-[2rem] p-8 relative overflow-hidden flex flex-col justify-between min-h-[440px]">
+    <!-- Main Card -->
+    <div id="mainWeatherCard" class="lg:col-span-8 glass-panel rounded-[2rem] p-8 relative overflow-hidden flex flex-col justify-between min-h-[500px]">
       <div class="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
-      <div class="relative z-10 flex justify-between items-start">
-        <div>
-          <h1 id="cityName" class="text-5xl font-bold text-on-surface mb-2">Search City</h1>
-          <p id="currentDateTime" class="text-slate-400 flex items-center gap-2">—</p>
-        </div>
-        <div class="text-right">
-          <span id="weatherIcon" class="material-symbols-outlined text-7xl text-primary" style="font-variation-settings:'FILL' 1">cloud</span>
-          <p id="weatherCondition" class="text-2xl font-medium text-on-surface mt-2">—</p>
+      <div class="relative z-10">
+        <div class="flex justify-between items-start">
+          <div>
+            <h1 id="cityName" class="text-6xl font-bold text-white mb-2">Search City</h1>
+            <p id="currentDateTime" class="text-slate-400 text-lg">—</p>
+            <p id="weatherDesc" class="text-purple-300 mt-4 max-w-md italic">—</p>
+          </div>
+          <div class="text-right">
+            <span id="weatherIcon" class="material-symbols-outlined text-8xl text-primary" style="font-variation-settings:'FILL' 1">cloud</span>
+            <p id="weatherCondition" class="text-3xl font-medium text-white mt-2">—</p>
+          </div>
         </div>
       </div>
       <div class="relative z-10 flex flex-col md:flex-row items-end justify-between gap-8">
         <div class="flex items-baseline">
-          <span id="currentTemp" class="text-9xl font-bold text-white tracking-tighter">—</span>
-          <span class="text-4xl text-slate-400 ml-2">°C</span>
+          <span id="currentTemp" class="text-[120px] font-bold text-white tracking-tighter leading-none">—</span>
+          <span class="text-5xl text-slate-400 ml-2">°</span>
         </div>
-        <div class="grid grid-cols-3 gap-4 w-full md:w-auto">
-          <div class="glass-panel p-4 rounded-2xl text-center"><span class="text-xs text-slate-400 block uppercase mb-1">Humidity</span><span id="humidity" class="font-bold text-white">—</span></div>
-          <div class="glass-panel p-4 rounded-2xl text-center"><span class="text-xs text-slate-400 block uppercase mb-1">Wind</span><span id="windSpeed" class="font-bold text-white">—</span></div>
-          <div class="glass-panel p-4 rounded-2xl text-center"><span class="text-xs text-slate-400 block uppercase mb-1">UV</span><span id="uvIndex" class="font-bold text-white">—</span></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full md:w-auto">
+          <div class="glass-panel p-4 rounded-2xl text-center"><span class="text-[10px] text-slate-500 block uppercase mb-1">Humidity</span><span id="humidity" class="text-lg font-bold text-white">—</span></div>
+          <div class="glass-panel p-4 rounded-2xl text-center"><span class="text-[10px] text-slate-500 block uppercase mb-1">Wind</span><span id="windSpeed" class="text-lg font-bold text-white">—</span></div>
+          <div class="glass-panel p-4 rounded-2xl text-center"><span class="text-[10px] text-slate-500 block uppercase mb-1">Rain Prob</span><span id="rainProb" class="text-lg font-bold text-blue-400">—</span></div>
+          <div class="glass-panel p-4 rounded-2xl text-center"><span class="text-[10px] text-slate-500 block uppercase mb-1">UV Index</span><span id="uvIndex" class="text-lg font-bold text-white">—</span></div>
         </div>
       </div>
     </div>
 
-    <!-- Map & Details -->
+    <!-- Right Side Panels -->
     <div class="lg:col-span-4 flex flex-col gap-6">
-      <div id="map" class="glass-panel"></div>
-      <div class="glass-panel rounded-[2rem] p-6 flex-1">
-        <h3 class="text-xs text-slate-500 uppercase tracking-widest mb-4">Feels Like</h3>
-        <div class="text-4xl font-bold text-white mb-2"><span id="feelsLike">—</span>°C</div>
-        <p id="feelsLikeDesc" class="text-sm text-slate-400 leading-relaxed">—</p>
+      <!-- Sun/Moon Panel -->
+      <div class="glass-panel rounded-[2rem] p-6 space-y-6">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-yellow-400">wb_sunny</span>
+                <div><p class="text-[10px] text-slate-500 uppercase">Sunrise</p><p id="sunrise" class="font-bold">—</p></div>
+            </div>
+            <div class="flex items-center gap-3 text-right">
+                <div><p class="text-[10px] text-slate-500 uppercase">Sunset</p><p id="sunset" class="font-bold">—</p></div>
+                <span class="material-symbols-outlined text-orange-400">wb_twilight</span>
+            </div>
+        </div>
+        <div class="pt-4 border-t border-white/5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-slate-400">brightness_4</span>
+                <div><p class="text-[10px] text-slate-500 uppercase">Moon Phase</p><p id="moonPhase" class="font-bold">—</p></div>
+            </div>
+            <div id="moonIcon" class="text-4xl">🌑</div>
+        </div>
+      </div>
+
+      <!-- Station Details -->
+      <div class="glass-panel rounded-[2rem] p-6 flex-1 grid grid-cols-2 gap-4">
+        <div><p class="text-[10px] text-slate-500 uppercase">Feels Like</p><p class="text-xl font-bold"><span id="feelsLike">—</span>°</p></div>
+        <div><p class="text-[10px] text-slate-500 uppercase">Pressure</p><p id="pressure" class="text-xl font-bold">—</p></div>
+        <div><p class="text-[10px] text-slate-500 uppercase">Visibility</p><p id="visibility" class="text-xl font-bold">—</p></div>
+        <div><p class="text-[10px] text-slate-500 uppercase">Cloud Cover</p><p id="cloudCover" class="text-xl font-bold">—</p></div>
+        <div><p class="text-[10px] text-slate-500 uppercase">Dew Point</p><p id="dewPoint" class="text-xl font-bold">—</p></div>
+        <div><p class="text-[10px] text-slate-500 uppercase">Wind Direction</p><p id="windDir" class="text-xl font-bold">—</p></div>
       </div>
     </div>
   </section>
 
-  <!-- Hourly Forecast (New) -->
+  <!-- Hourly Timeline -->
   <section>
-    <h3 class="text-xs text-slate-500 uppercase tracking-widest mb-4">Hourly Timeline (Next 24h)</h3>
-    <div id="hourlyContainer" class="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-      <!-- Hourly items -->
+    <h3 class="text-xs text-slate-500 uppercase tracking-widest mb-4 font-bold">24-Hour Timeline</h3>
+    <div id="hourlyContainer" class="flex gap-4 overflow-x-auto no-scrollbar pb-2"></div>
+  </section>
+
+  <!-- Trends (Graph First) -->
+  <section class="glass-panel rounded-[2rem] p-8 h-[500px] flex flex-col">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold">Weather Trends</h2>
+        <select id="chartType" class="bg-white/10 border-none text-sm rounded-lg text-slate-300 outline-none px-4 py-2">
+            <option value="temp">Temperature Outlook</option>
+            <option value="rain">Rain Probability</option>
+        </select>
+    </div>
+    <div class="flex-1"><canvas id="trendChart"></canvas></div>
+  </section>
+
+  <!-- Radar Map -->
+  <section class="space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-2">
+        <h2 class="text-2xl font-bold">Precipitation Radar</h2>
+        <div class="flex flex-wrap gap-2">
+            <button id="radarPlayBtn" class="flex items-center gap-2 bg-primary/20 text-primary px-4 py-2 rounded-full text-xs font-bold hover:bg-primary/30 transition-all">
+                <span class="material-symbols-outlined text-sm">play_arrow</span> ANIMATE
+            </button>
+            <select id="mapStyle" class="bg-white/10 border-none text-xs rounded-full text-slate-300 outline-none px-4 py-2">
+                <option value="dark">Dark Theme</option>
+                <option value="satellite">Satellite</option>
+            </select>
+            <select id="radarTheme" class="bg-white/10 border-none text-xs rounded-full text-slate-300 outline-none px-4 py-2">
+                <option value="2">Universal (Default)</option>
+                <option value="4">Contrast (Vivid)</option>
+                <option value="8">Weather.com Style</option>
+            </select>
+        </div>
+    </div>
+    <div class="relative">
+        <div id="map" class="glass-panel"></div>
+        <div id="radarTimeLabel" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[20] glass-panel px-4 py-1 rounded-full text-[10px] text-slate-400 font-bold hidden border-white/20">
+            RADAR: <span id="radarTimeDisplay" class="text-white">LIVE</span>
+        </div>
     </div>
   </section>
 
-  <!-- Trends (Data Visualization) -->
-  <section class="glass-panel rounded-[2rem] p-8">
-    <h2 class="text-2xl font-bold mb-8">Weekly Temperature Trend</h2>
-    <div class="h-[300px] w-full">
-      <canvas id="trendChart"></canvas>
-    </div>
-  </section>
-
-  <!-- 7-Day Forecast -->
+  <!-- 15-Day Extended Forecast -->
   <section>
-    <h2 class="text-2xl font-bold mb-6">Extended Forecast</h2>
-    <div id="forecastContainer" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
-      <!-- Forecast cards -->
-    </div>
+    <h2 class="text-2xl font-bold mb-6">15-Day Extended Forecast</h2>
+    <div id="forecastContainer" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-8 gap-4"></div>
   </section>
 </main>
 
 <script>
-  let map, trendChart;
+  let map, radarLayer, trendChart;
+  let weatherData = null;
 
-  // ── Helpers ────────────────────────────────────────────
+  // 1. Helpers
   function getWeatherIcon(condition = '') {
     const c = condition.toLowerCase();
     if (c.includes('thunder') || c.includes('storm')) return 'thunderstorm';
-    if (c.includes('snow') || c.includes('blizzard') || c.includes('sleet')) return 'weather_snowy';
-    if (c.includes('rain') || c.includes('drizzle') || c.includes('shower')) return 'rainy';
-    if (c.includes('fog') || c.includes('mist') || c.includes('haze')) return 'foggy';
+    if (c.includes('snow') || c.includes('blizzard')) return 'weather_snowy';
+    if (c.includes('rain') || c.includes('drizzle')) return 'rainy';
+    if (c.includes('fog') || c.includes('mist')) return 'foggy';
     if (c.includes('overcast')) return 'cloud';
-    if (c.includes('partly') || c.includes('partial')) return 'partly_cloudy_day';
-    if (c.includes('cloud')) return 'cloudy';
+    if (c.includes('partly')) return 'partly_cloudy_day';
     if (c.includes('clear') || c.includes('sunny')) return 'wb_sunny';
-    return 'partly_cloudy_day';
+    return 'cloudy';
   }
 
-  // 1. Initialization
-  function initMap(lat = 0, lon = 0) {
+  function getMoonIcon(phase) {
+    if (phase === 0) return '🌑'; if (phase < 0.25) return '🌒'; if (phase === 0.25) return '🌓';
+    if (phase < 0.5) return '🌔'; if (phase === 0.5) return '🌕'; if (phase < 0.75) return '🌖';
+    if (phase === 0.75) return '🌗'; return '🌘';
+  }
+
+  function getMoonPhaseName(phase) {
+    if (phase === 0) return 'New Moon'; if (phase < 0.25) return 'Waxing Crescent';
+    if (phase === 0.25) return 'First Quarter'; if (phase < 0.5) return 'Waxing Gibbous';
+    if (phase === 0.5) return 'Full Moon'; if (phase < 0.75) return 'Waning Gibbous';
+    if (phase === 0.75) return 'Last Quarter'; return 'Waning Crescent';
+  }
+
+  function parseDayName(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'});
+  }
+
+  // 2. Maps & Radar
+  let radarFrames = [];
+  let currentFrameIndex = 0;
+  let animationInterval = null;
+  let baseLayer = null;
+
+  function initMap(lat, lon) {
     if (map) map.remove();
-    map = L.map('map', { zoomControl: false }).setView([lat, lon], 10);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+    map = L.map('map', { 
+        zoomControl: false,
+        attributionControl: false 
+    }).setView([lat, lon], 8);
+    
+    setBaseLayer(document.getElementById('mapStyle').value);
+    loadRadar();
   }
-  initMap();
 
-  function initChart(labels, temps) {
+  function setBaseLayer(style) {
+    if (baseLayer) map.removeLayer(baseLayer);
+    const url = style === 'dark' 
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+    baseLayer = L.tileLayer(url).addTo(map);
+  }
+
+  function loadRadar() {
+    fetch('https://api.rainviewer.com/public/weather-maps.json')
+      .then(r => r.json())
+      .then(data => {
+        radarFrames = data.radar.past;
+        showRadarFrame(radarFrames.length - 1);
+      });
+  }
+
+  function showRadarFrame(index) {
+    if (radarLayer) map.removeLayer(radarLayer);
+    const theme = document.getElementById('radarTheme').value;
+    const path = radarFrames[index].path;
+    
+    radarLayer = L.tileLayer(`https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/${theme}/1_1.png`, {
+        opacity: 0.6,
+        zIndex: 100,
+        maxZoom: 10
+    }).addTo(map);
+
+    const date = new Date(radarFrames[index].time * 1000);
+    document.getElementById('radarTimeDisplay').textContent = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  }
+
+  function toggleAnimation() {
+    const btn = document.getElementById('radarPlayBtn');
+    const label = document.getElementById('radarTimeLabel');
+    
+    if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm">play_arrow</span> ANIMATE';
+        label.classList.add('hidden');
+        showRadarFrame(radarFrames.length - 1);
+    } else {
+        label.classList.remove('hidden');
+        btn.innerHTML = '<span class="material-symbols-outlined text-sm">stop</span> STOP';
+        animationInterval = setInterval(() => {
+            currentFrameIndex = (currentFrameIndex + 1) % radarFrames.length;
+            showRadarFrame(currentFrameIndex);
+        }, 1000);
+    }
+  }
+  initMap(0,0);
+
+  // 3. Charts
+  function updateChart(type = 'temp') {
+    if (!weatherData) return;
     const ctx = document.getElementById('trendChart').getContext('2d');
     if (trendChart) trendChart.destroy();
     
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(183, 109, 255, 0.4)');
-    gradient.addColorStop(1, 'rgba(183, 109, 255, 0)');
+    const labels = weatherData.days.map(d => parseDayName(d.datetime));
+    const dataset = {
+        label: type === 'temp' ? 'Temperature (°C)' : 'Rain Probability (%)',
+        data: weatherData.days.map(d => type === 'temp' ? d.temp : d.precipprob),
+        borderColor: type === 'temp' ? '#b76dff' : '#60a5fa',
+        backgroundColor: 'rgba(183, 109, 255, 0.1)',
+        borderWidth: 3, tension: 0.4, fill: true, pointRadius: 4
+    };
 
     trendChart = new Chart(ctx, {
       type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Temperature (°C)',
-          data: temps,
-          borderColor: '#b76dff',
-          borderWidth: 3,
-          tension: 0.4,
-          fill: true,
-          backgroundColor: gradient,
-          pointBackgroundColor: '#fff',
-          pointRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-          x: { grid: { display: false }, ticks: { color: '#64748b' } }
-        }
+      data: { labels, datasets: [dataset] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } }
       }
     });
   }
 
-  // 2. Personalization (LocalStorage)
+  // 4. Persistence
   function saveRecent(city) {
-    let recent = JSON.parse(localStorage.getItem('recent_cities') || '[]');
-    recent = [city, ...recent.filter(c => c !== city)].slice(0, 5);
-    localStorage.setItem('recent_cities', JSON.stringify(recent));
+    let recent = JSON.parse(localStorage.getItem('recent_cities_v2') || '[]');
+    recent = [city, ...recent.filter(c => c !== city)].slice(0, 8);
+    localStorage.setItem('recent_cities_v2', JSON.stringify(recent));
     renderRecent();
   }
 
   function renderRecent() {
     const container = document.getElementById('recentContainer');
-    const recent = JSON.parse(localStorage.getItem('recent_cities') || '[]');
+    const recent = JSON.parse(localStorage.getItem('recent_cities_v2') || '[]');
     if (recent.length === 0) return;
     document.getElementById('recentSection').classList.remove('hidden');
     container.innerHTML = recent.map(city => `
-      <button onclick="fetchWeather('${city}')" class="px-4 py-2 glass-panel rounded-full text-sm whitespace-nowrap hover:bg-white/10 transition-all border-white/5">
+      <button onclick="fetchWeather('${city}')" class="px-4 py-2 glass-panel rounded-full text-xs whitespace-nowrap hover:bg-primary/20 hover:text-white transition-all border-white/5">
         ${city}
       </button>
     `).join('');
   }
   renderRecent();
 
-  // 3. Dynamic Themes
-  function updateTheme(condition) {
-    const body = document.body;
-    body.classList.remove('weather-rain', 'weather-clear', 'weather-storm');
-    const c = condition.toLowerCase();
-    if (c.includes('rain')) body.classList.add('weather-rain');
-    else if (c.includes('clear') || c.includes('sunny')) body.classList.add('weather-clear');
-    else if (c.includes('storm') || c.includes('thunder')) body.classList.add('weather-storm');
-  }
-
-  // 4. API & Data Mapping
+  // 5. Data Core
   async function fetchWeather(city) {
     if (!city) return;
     document.getElementById('loadingIndicator').classList.remove('hidden');
     try {
       const response = await fetch(`/weather/${encodeURIComponent(city)}/`);
       const data = await response.json();
+      weatherData = data;
       
-      // Update Hero
+      // Update Main
       document.getElementById('cityName').textContent = data.resolvedAddress;
       document.getElementById('currentTemp').textContent = Math.round(data.currentConditions.temp);
       document.getElementById('weatherCondition').textContent = data.currentConditions.conditions;
+      document.getElementById('weatherDesc').textContent = data.days[0].description;
       document.getElementById('humidity').textContent = data.currentConditions.humidity + '%';
       document.getElementById('windSpeed').textContent = data.currentConditions.windspeed + ' km/h';
-      document.getElementById('feelsLike').textContent = Math.round(data.currentConditions.feelslike);
+      document.getElementById('rainProb').textContent = (data.days[0].precipprob || 0) + '%';
+      document.getElementById('uvIndex').textContent = data.currentConditions.uvindex;
       
-      updateTheme(data.currentConditions.conditions);
+      // Update Advanced
+      document.getElementById('feelsLike').textContent = Math.round(data.currentConditions.feelslike);
+      document.getElementById('pressure').textContent = data.currentConditions.pressure + ' hPa';
+      document.getElementById('visibility').textContent = data.currentConditions.visibility + ' km';
+      document.getElementById('cloudCover').textContent = data.currentConditions.cloudcover + '%';
+      document.getElementById('dewPoint').textContent = Math.round(data.currentConditions.dew) + '°';
+      document.getElementById('windDir').textContent = data.currentConditions.winddir + '°';
+
+      // Sun/Moon
+      document.getElementById('sunrise').textContent = data.currentConditions.sunrise;
+      document.getElementById('sunset').textContent = data.currentConditions.sunset;
+      document.getElementById('moonPhase').textContent = getMoonPhaseName(data.currentConditions.moonphase);
+      document.getElementById('moonIcon').textContent = getMoonIcon(data.currentConditions.moonphase);
+
+      // Risk
+      const risk = data.days[0].severerisk || 0;
+      document.getElementById('severeBadge').classList.toggle('hidden', risk < 20);
+
       saveRecent(data.resolvedAddress);
       initMap(data.latitude, data.longitude);
+      updateChart(document.getElementById('chartType').value);
+
+      // Hourly
+      const allHours = data.days.flatMap(d => d.hours);
+      const currentHour = new Date().getHours();
+      let startIndex = allHours.findIndex(h => parseInt(h.datetime.split(':')[0]) >= currentHour);
+      if (startIndex === -1) startIndex = 0;
       
-      // Helper: safely parse "YYYY-MM-DD" without timezone shift
-      function parseDayName(dateStr) {
-        const [y, m, d] = dateStr.split('-').map(Number);
-        return new Date(y, m - 1, d).toLocaleDateString('en-US', {weekday: 'short'});
-      }
-
-      // Update Chart & Forecast
-      const forecastLabels = data.days.slice(0, 7).map(d => parseDayName(d.datetime));
-      const forecastTemps = data.days.slice(0, 7).map(d => d.temp);
-      initChart(forecastLabels, forecastTemps);
-
-      // Update Hourly (Next 24 Hours)
-      const hourlyContainer = document.getElementById('hourlyContainer');
-      // Defensive check: only use days that have hourly data
-      const daysWithHours = data.days.filter(d => d.hours && d.hours.length > 0);
-      if (daysWithHours.length === 0) {
-        hourlyContainer.innerHTML = '<p class="text-slate-500 text-sm">Hourly data unavailable. Try searching again.</p>';
-      } else {
-        const allHours = daysWithHours.flatMap(d => d.hours);
-        const currentHour = new Date().getHours();
-        // Find the first hour in today's data that matches or exceeds the current hour
-        const todayHours = daysWithHours[0].hours;
-        let startIndex = todayHours.findIndex(h => parseInt(h.datetime.split(':')[0]) >= currentHour);
-        if (startIndex === -1) startIndex = 0;
-        // Offset into allHours: skip today's past hours
-        const globalStart = daysWithHours[0].hours.indexOf(todayHours[startIndex]);
-
-        hourlyContainer.innerHTML = allHours.slice(globalStart, globalStart + 24).map(hour => `
-          <div class="glass-panel px-6 py-4 rounded-2xl text-center min-w-[120px] border-white/5 flex flex-col items-center gap-2">
-            <div class="text-[10px] text-slate-500 uppercase font-bold">${hour.datetime.slice(0,5)}</div>
-            <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">${getWeatherIcon(hour.conditions)}</span>
-            <div class="font-bold text-white">${Math.round(hour.temp)}°</div>
-            <div class="text-[10px] text-slate-500 truncate w-full">${hour.conditions}</div>
-          </div>
-        `).join('');
-      }
-
-      const forecastContainer = document.getElementById('forecastContainer');
-      forecastContainer.innerHTML = data.days.slice(1, 8).map(day => `
-        <div class="glass-panel p-6 rounded-3xl text-center glass-card-hover transition-all">
-          <div class="text-slate-500 text-xs font-bold uppercase mb-3">${parseDayName(day.datetime)}</div>
-          <span class="material-symbols-outlined text-primary text-3xl mb-2" style="font-variation-settings:'FILL' 1">${getWeatherIcon(day.conditions)}</span>
-          <div class="text-xl font-bold">${Math.round(day.tempmax)}°</div>
-          <div class="text-slate-500 text-sm">${Math.round(day.tempmin)}°</div>
+      document.getElementById('hourlyContainer').innerHTML = allHours.slice(startIndex, startIndex + 24).map(h => `
+        <div class="glass-panel px-6 py-4 rounded-2xl text-center min-w-[120px] border-white/5 space-y-2">
+          <div class="text-[10px] text-slate-500 uppercase font-bold">${h.datetime.slice(0,5)}</div>
+          <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">${getWeatherIcon(h.conditions)}</span>
+          <div class="font-bold text-white">${Math.round(h.temp)}°</div>
+          <div class="text-[10px] text-blue-400">${Math.round(h.precipprob)}% Rain</div>
         </div>
       `).join('');
 
-    } catch (e) {
-      console.error(e);
-    } finally {
-      document.getElementById('loadingIndicator').classList.add('hidden');
-    }
+      // 15-Day Forecast
+      document.getElementById('forecastContainer').innerHTML = data.days.map(day => `
+        <div class="glass-panel p-4 rounded-3xl text-center hover:border-primary/40 transition-all cursor-default">
+          <div class="text-slate-500 text-[10px] font-bold uppercase mb-2">${parseDayName(day.datetime)}</div>
+          <span class="material-symbols-outlined text-primary text-2xl mb-1" style="font-variation-settings:'FILL' 1">${getWeatherIcon(day.conditions)}</span>
+          <div class="text-lg font-bold">${Math.round(day.tempmax)}°</div>
+          <div class="text-slate-500 text-xs">${Math.round(day.tempmin)}°</div>
+          <div class="mt-2 text-[10px] text-blue-400 font-bold">${Math.round(day.precipprob)}%</div>
+        </div>
+      `).join('');
+
+    } catch (e) { console.error(e); } finally { document.getElementById('loadingIndicator').classList.add('hidden'); }
   }
 
   // Events
-  document.getElementById('citySearchInput').addEventListener('keypress', e => {
-    if (e.key === 'Enter') fetchWeather(e.target.value);
-  });
+  document.getElementById('citySearchInput').addEventListener('keypress', e => { if (e.key === 'Enter') fetchWeather(e.target.value); });
+  document.getElementById('chartType').addEventListener('change', e => updateChart(e.target.value));
+  document.getElementById('radarPlayBtn').addEventListener('click', toggleAnimation);
+  document.getElementById('mapStyle').addEventListener('change', (e) => setBaseLayer(e.target.value));
+  document.getElementById('radarTheme').addEventListener('change', () => showRadarFrame(radarFrames.length - 1));
   
-  // Update Clock
   setInterval(() => {
     document.getElementById('currentDateTime').textContent = new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true, weekday: 'long', month: 'short', day: 'numeric' });
   }, 1000);
