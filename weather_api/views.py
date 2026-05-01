@@ -10,13 +10,7 @@ from django.core.cache import cache
 from django.conf import settings
 from rest_framework.throttling import UserRateThrottle
 
-# Custom throttle to limit requests per user
-class WeatherThrottle(UserRateThrottle):
-    scope = 'weather'
-
 class WeatherView(APIView):
-    throttle_classes = [WeatherThrottle]
-
     def get(self, request, city):
         """
         GET /api/weather/{city}/
