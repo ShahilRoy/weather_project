@@ -148,6 +148,20 @@
 <script>
   let map, trendChart;
 
+  // ── Helpers ────────────────────────────────────────────
+  function getWeatherIcon(condition = '') {
+    const c = condition.toLowerCase();
+    if (c.includes('thunder') || c.includes('storm')) return 'thunderstorm';
+    if (c.includes('snow') || c.includes('blizzard') || c.includes('sleet')) return 'weather_snowy';
+    if (c.includes('rain') || c.includes('drizzle') || c.includes('shower')) return 'rainy';
+    if (c.includes('fog') || c.includes('mist') || c.includes('haze')) return 'foggy';
+    if (c.includes('overcast')) return 'cloud';
+    if (c.includes('partly') || c.includes('partial')) return 'partly_cloudy_day';
+    if (c.includes('cloud')) return 'cloudy';
+    if (c.includes('clear') || c.includes('sunny')) return 'wb_sunny';
+    return 'partly_cloudy_day';
+  }
+
   // 1. Initialization
   function initMap(lat = 0, lon = 0) {
     if (map) map.remove();
@@ -243,35 +257,48 @@
       saveRecent(data.resolvedAddress);
       initMap(data.latitude, data.longitude);
       
+      // Helper: safely parse "YYYY-MM-DD" without timezone shift
+      function parseDayName(dateStr) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString('en-US', {weekday: 'short'});
+      }
+
       // Update Chart & Forecast
-      const forecastLabels = data.days.slice(0, 7).map(d => new Date(d.datetime).toLocaleDateString('en-US', {weekday: 'short'}));
+      const forecastLabels = data.days.slice(0, 7).map(d => parseDayName(d.datetime));
       const forecastTemps = data.days.slice(0, 7).map(d => d.temp);
       initChart(forecastLabels, forecastTemps);
 
       // Update Hourly (Next 24 Hours)
       const hourlyContainer = document.getElementById('hourlyContainer');
-      const allHours = data.days.flatMap(d => d.hours);
-      const now = new Date();
-      const currentHourStr = now.getHours().toString().padStart(2, '0') + ':00:00';
-      
-      // Find the current hour index
-      let startIndex = allHours.findIndex(h => h.datetime >= currentHourStr);
-      if (startIndex === -1) startIndex = 0;
+      // Defensive check: only use days that have hourly data
+      const daysWithHours = data.days.filter(d => d.hours && d.hours.length > 0);
+      if (daysWithHours.length === 0) {
+        hourlyContainer.innerHTML = '<p class="text-slate-500 text-sm">Hourly data unavailable. Try searching again.</p>';
+      } else {
+        const allHours = daysWithHours.flatMap(d => d.hours);
+        const currentHour = new Date().getHours();
+        // Find the first hour in today's data that matches or exceeds the current hour
+        const todayHours = daysWithHours[0].hours;
+        let startIndex = todayHours.findIndex(h => parseInt(h.datetime.split(':')[0]) >= currentHour);
+        if (startIndex === -1) startIndex = 0;
+        // Offset into allHours: skip today's past hours
+        const globalStart = daysWithHours[0].hours.indexOf(todayHours[startIndex]);
 
-      hourlyContainer.innerHTML = allHours.slice(startIndex, startIndex + 24).map(hour => `
-        <div class="glass-panel px-6 py-4 rounded-2xl text-center min-w-[120px] border-white/5 flex flex-col items-center gap-2">
-          <div class="text-[10px] text-slate-500 uppercase font-bold">${hour.datetime.slice(0,5)}</div>
-          <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">${getWeatherIcon(hour.conditions)}</span>
-          <div class="font-bold text-white">${Math.round(hour.temp)}°</div>
-          <div class="text-[10px] text-slate-500 truncate w-full">${hour.conditions}</div>
-        </div>
-      `).join('');
+        hourlyContainer.innerHTML = allHours.slice(globalStart, globalStart + 24).map(hour => `
+          <div class="glass-panel px-6 py-4 rounded-2xl text-center min-w-[120px] border-white/5 flex flex-col items-center gap-2">
+            <div class="text-[10px] text-slate-500 uppercase font-bold">${hour.datetime.slice(0,5)}</div>
+            <span class="material-symbols-outlined text-primary text-2xl" style="font-variation-settings:'FILL' 1">${getWeatherIcon(hour.conditions)}</span>
+            <div class="font-bold text-white">${Math.round(hour.temp)}°</div>
+            <div class="text-[10px] text-slate-500 truncate w-full">${hour.conditions}</div>
+          </div>
+        `).join('');
+      }
 
       const forecastContainer = document.getElementById('forecastContainer');
       forecastContainer.innerHTML = data.days.slice(1, 8).map(day => `
         <div class="glass-panel p-6 rounded-3xl text-center glass-card-hover transition-all">
-          <div class="text-slate-500 text-xs font-bold uppercase mb-3">${new Date(day.datetime).toLocaleDateString('en-US', {weekday: 'short'})}</div>
-          <span class="material-symbols-outlined text-primary text-3xl mb-2">cloud</span>
+          <div class="text-slate-500 text-xs font-bold uppercase mb-3">${parseDayName(day.datetime)}</div>
+          <span class="material-symbols-outlined text-primary text-3xl mb-2" style="font-variation-settings:'FILL' 1">${getWeatherIcon(day.conditions)}</span>
           <div class="text-xl font-bold">${Math.round(day.tempmax)}°</div>
           <div class="text-slate-500 text-sm">${Math.round(day.tempmin)}°</div>
         </div>
