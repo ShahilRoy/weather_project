@@ -115,7 +115,7 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'AetherWeather API',
+    'TITLE': 'SkyCast API',
     'DESCRIPTION': 'A premium weather intelligence API providing real-time data and forecasts.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,

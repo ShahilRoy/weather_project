@@ -24,7 +24,7 @@ def get_weather_data(city):
     params = {
         'key': api_key,
         'unitGroup': 'metric',
-        'include': 'current,days',
+        'include': 'current,days,hours',
         'contentType': 'json'
     }
 
