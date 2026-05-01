@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyCast | Premium Weather Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 14px;
+            color: white;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+        }
+
+        .weather-info {
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .temp {
+            font-size: 5rem;
+            font-weight: 300;
+            margin: 1rem 0;
+        }
+
+        .condition {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            text-transform: capitalize;
+            margin-bottom: 2rem;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 16px;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .loader {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            color: #ef4444;
+            text-align: center;
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .forecast-title {
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: left;
+            color: var(--text);
+        }
+
+        .forecast-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .forecast-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.75rem 0.25rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .forecast-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-5px);
+        }
+
+        .forecast-day {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .forecast-temp {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .forecast-temp-min {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="glass-card">
+            <div class="header">
+                <h1>SkyCast</h1>
+                <p>Precise Weather Insights</p>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="cityInput" placeholder="Enter city name..." autocomplete="off">
+                <button onclick="getWeather()">Search</button>
+            </div>
+
+            <div id="loading" class="loading">
+                <div class="loader"></div>
+            </div>
+
+            <div id="error" class="error"></div>
+
+            <div id="weatherInfo" class="weather-info">
+                <h2 id="cityName">London</h2>
+                <div class="temp" id="temperature">24°</div>
+                <div class="condition" id="condition">Cloudy</div>
+                
+                <div class="details">
+                    <div class="detail-item">
+                        <div class="detail-label">Humidity</div>
+                        <div class="detail-value" id="humidity">45%</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Wind Speed</div>
+                        <div class="detail-value" id="wind">12 km/h</div>
+                    </div>
+                </div>
+
+                <div class="forecast-title">7-Day Forecast</div>
+                <div class="forecast-container" id="forecastContainer">
+                    <!-- Forecast items will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getDayName(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { weekday: 'short' });
+        }
+
+        async function getWeather() {
+            const city = document.getElementById('cityInput').value;
+            if (!city) return;
+
+            const info = document.getElementById('weatherInfo');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const forecastContainer = document.getElementById('forecastContainer');
+
+            info.style.display = 'none';
+            error.style.display = 'none';
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch(`/weather/${encodeURIComponent(city)}/`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'City not found or API error');
+                }
+                
+                // Set Current Weather
+                document.getElementById('cityName').textContent = data.resolvedAddress;
+                document.getElementById('temperature').textContent = Math.round(data.currentConditions.temp) + '°';
+                document.getElementById('condition').textContent = data.currentConditions.conditions;
+                document.getElementById('humidity').textContent = data.currentConditions.humidity + '%';
+                document.getElementById('wind').textContent = data.currentConditions.windspeed + ' km/h';
+
+                // Set Forecast
+                forecastContainer.innerHTML = '';
+                data.days.slice(1, 8).forEach(day => {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'forecast-item';
+                    dayEl.innerHTML = `
+                        <div class="forecast-day">${getDayName(day.datetime)}</div>
+                        <div class="forecast-temp">${Math.round(day.tempmax)}°</div>
+                        <div class="forecast-temp-min">${Math.round(day.tempmin)}°</div>
+                    `;
+                    forecastContainer.appendChild(dayEl);
+                });
+
+                loading.style.display = 'none';
+                info.style.display = 'block';
+            } catch (err) {
+                loading.style.display = 'none';
+                error.textContent = err.message;
+                error.style.display = 'block';
+            }
+        }
+
+        // Allow Enter key to search
+        document.getElementById('cityInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                getWeather();
+            }
+        });
+    </script>
+</body>
+</html>
