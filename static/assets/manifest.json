@@ -1,0 +1,16 @@
+{
+  "name": "SkyCast Weather",
+  "short_name": "SkyCast",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1326",
+  "theme_color": "#1a1033",
+  "description": "Professional Weather Intelligence Dashboard",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1163/1163734.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
