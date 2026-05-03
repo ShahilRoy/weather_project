@@ -56,7 +56,7 @@ Access the app at: `http://localhost:8000`
 When deploying, set the following in your host's dashboard:
 - `DEBUG`: `False`
 - `REDIS_URL`: Your **Upstash** `rediss://` connection string.
-- `ALLOWED_HOSTS`: Your live domain (e.g., `skycast.onrender.com`).
+- `ALLOWED_HOSTS`: Your live domain (e.g., `weather-service-czlo.onrender.com`).
 
 ### 2. Database
 The project uses SQLite stored in the `database/` folder. This folder is ignored by Git. For production, the database is ephemeral (resets on restart). If you need persistent users, consider connecting a managed PostgreSQL database.
@@ -83,4 +83,10 @@ Once the app is running, access the documentation at:
 
 ---
 
+## 💡 Credits
+- Project inspired by [roadmap.sh](https://roadmap.sh/projects/weather-api-wrapper-service)
+
+---
+
 **Developed with ❤️ by Antigravity**
+
